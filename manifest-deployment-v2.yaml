@@ -1,0 +1,242 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: alishazaei/user-service:0.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9002
+          env:
+            - name: EUREKA_SERVICE
+              valueFrom:
+                configMapKeyRef:
+                  name: eureka-configmap
+                  key: eureka_server_address
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service-svc
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9002
+      targetPort: 9002
+  selector:
+    app: user-service
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hystrix-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hystrix-dashboard
+  template:
+    metadata:
+      labels:
+        app: hystrix-dashboard
+    spec:
+      containers:
+        - name: hystrix-dashboard
+          image: alishazaei/hystrix-dashboard:0.0.1
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 9295
+          env:
+            - name: EUREKA_SERVICE
+              valueFrom:
+                configMapKeyRef:
+                  name: eureka-configmap
+                  key: eureka_server_address
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hystrix-dashboard-svc
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9295
+      targetPort: 9295
+  selector:
+    app: hystrix-dashboard
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: department-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: department-service
+  template:
+    metadata:
+      labels:
+        app: department-service
+    spec:
+      containers:
+        - name: department-service
+          image: alishazaei/department-service:0.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9001
+          env:
+            - name: EUREKA_SERVICE
+              valueFrom:
+                configMapKeyRef:
+                  name: eureka-configmap
+                  key: eureka_server_address
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: department-service-svc
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9001
+      targetPort: 9001
+  selector:
+    app: department-service
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-config-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloud-config-server
+  template:
+    metadata:
+      labels:
+        app: cloud-config-server
+    spec:
+      containers:
+        - name: cloud-config-server
+          image: alishazaei/cloud-config-server:0.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9296
+          env:
+            - name: EUREKA_SERVICE
+              valueFrom:
+                configMapKeyRef:
+                  name: eureka-configmap
+                  key: eureka_server_address
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-config-server-svc
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9296
+      targetPort: 9296
+  selector:
+    app: cloud-config-server
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: alishazaei/cloud-gateway:0.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9191
+          env:
+            - name: EUREKA_SERVICE
+              valueFrom:
+                configMapKeyRef:
+                  name: eureka-configmap
+                  key: eureka_server_address
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway-svc
+spec:
+  ports:
+    - port: 9191
+      targetPort: 9191
+      protocol: TCP
+  selector:
+    app: api-gateway
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eureka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eureka
+  template:
+    metadata:
+      labels:
+        app: eureka
+    spec:
+      containers:
+        - name: eureka
+          image: alishazaei/service-registry:0.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8761
+          env:
+            - name: EUREKA_SERVER_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: eureka-configmap
+                  key: eureka_service_address
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka-svc
+  labels:
+    app: eureka
+spec:
+  selector:
+    app: eureka
+  type: ClusterIP
+  ports:
+    - port: 8761
+      targetPort: 8761
